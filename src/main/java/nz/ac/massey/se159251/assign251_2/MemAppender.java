@@ -4,27 +4,69 @@ import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.Layout;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import java.lang.management.ManagementFactory;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class MemAppender extends AppenderSkeleton {
+public class MemAppender extends AppenderSkeleton implements MemAppenderMBean{
+
     private static MemAppender instance;
     private List<LoggingEvent> events;
     private int maxSize = 1000; //default, older logs deleted
     private long discardedCount = 0;
 
-    // constructor singleton
+    // constructor
     private MemAppender(List<LoggingEvent> eventList, Layout layout) {
         this.events = eventList;
         this.layout = layout;
+        try{
+            MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+            ObjectName name = new ObjectName("nz.ac.massey:type=MemAppender,name=" + this.hashCode());
+            server.registerMBean(this, name);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    //reset instance for testing
+    public static void resetInstance(){
+        instance = null;
     }
 
     // singleton accessor
-    public static synchronized MemAppender getInstance(List<LoggingEvent> list, Layout layout) {
-        if (instance == null) {
-            instance = new MemAppender(list, layout);
+    public static MemAppender getInstance(List<LoggingEvent> list, Layout layout) {
+        if (instance == null){
+            instance = new MemAppender(list,layout);
         }
         return instance;
+    }
+    
+    //methods for MBEAN
+    @Override
+    public int getLogsESize(){
+        if (instance == null){
+            return 0;
+        }
+            return instance.getCurrentLogs().
+                    stream()
+                    .filter(e ->e.getRenderedMessage() != null)
+                    .mapToInt(e->e.getRenderedMessage().length()).sum();
+    }
+    @Override
+    public int getDiscardedLogs(){
+        return instance.getDiscardedLogs();
+    }
+    @Override
+    public String[] getLogMessages(){
+        if (instance == null){
+            return new String[0];
+        }
+        return instance.getCurrentLogs().stream().
+                map(e->e.getRenderedMessage()).toArray(String[]::new);
     }
 
     // called automatically by Log4j when there is a log

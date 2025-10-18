@@ -16,6 +16,7 @@ public class MemAppenderTest {
 
     @BeforeEach
     void setUp(){
+        MemAppender.resetInstance();
         List<LoggingEvent> aList = new ArrayList<>();
         Layout layout = new SimpleLayout();
         appender = MemAppender.getInstance(aList, layout);

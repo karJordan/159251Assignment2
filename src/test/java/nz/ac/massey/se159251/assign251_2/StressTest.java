@@ -25,9 +25,9 @@ public class StressTest {
             runTestConfiguration("ArrayList", new ArrayList<>(), maxsize);
             runTestConfiguration("LinkedList", new LinkedList<>(),maxsize);
         }
-        System.out.println("Attach VisualVM now...");
+        System.out.println("link VisualVM");//had to slow down test for VisualVM
 
-        Thread.sleep(30_000);
+        //Thread.sleep(10_000);
 
     }
     //runs a test config for a list and maxsize
@@ -37,7 +37,7 @@ public class StressTest {
 
         Thread.sleep(5000);// 5s pause between tests
 
-        //create memory appender with dependency injection
+        //memory appender with dependency injection
         MemAppender memAppender = MemAppender.getInstance(list, velLayout);
         memAppender.setMaxSize(maxsize);
 
